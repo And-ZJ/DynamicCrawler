@@ -1,14 +1,21 @@
 # -*— coding:utf-8 -*-
 import urllib.request
 import urllib.response
-import random,sys
-from PyQt5.QtWebEngineWidgets import QWebEnginePage
+import random, sys
+from PyQt5.QtWebEngineWidgets import QWebEnginePage, QWebEngineView
 from PyQt5.QtWidgets import QApplication
 from PyQt5.QtCore import QUrl
 
+
 # 用于下载时，渲染页面使用，当渲染完成，即可开始下载
 class MyWebBrowser(QWebEnginePage):
+    """
+    注意：经测试发现，若实例化类 MyWebBrowser 为全局变量，易出现进程 qtwebengineprocess 无法自动退出的状况（此进程会占用大量CPU）
+    初步推测是 QWebEnginePage 对象 没有正常退出所致。若是局部变量，则不会出现此情况，可参见 localTest/example.py 写法
+    """
+
     app = None
+
     # 类变量 QApplication
     # 实际测试时，若调用了多个MyWebBrowser对象（有先后顺序的调用）
     # 比如现在某些页面上，获取了所有包含图片的页面链接，再去打开这些链接上抓取图片
@@ -25,6 +32,9 @@ class MyWebBrowser(QWebEnginePage):
         self.html = ''
         # 将加载完成信号与槽连接
         self.loadFinished.connect(self._on_load_finished)
+        self.view = QWebEngineView()
+        self.view.setPage(self)
+        self.view.show()
         # print("DownloadDynamicPage Init")
 
     def downloadHtml(self, url):
@@ -77,7 +87,7 @@ class DownloadUrl:
     @staticmethod
     def download(url, referer_url: str = ""):
         '''
-            下载url所指文件，可一定程度上绕过403错误
+            下载url所指文件，用不同的浏览器标识可一定程度上绕过403错误
         '''
         randomUserAgent = random.choice(DownloadUrl.userAgentList)
         request = urllib.request.Request(url)
@@ -92,9 +102,6 @@ class DownloadUrl:
         if referer_url != "":
             request.add_header("Referer", referer_url)
         response2 = urllib.request.urlopen(request)
-        print(response2.getcode(), url)
-        # 返回下载的所有内容
+        print('download:', response2.getcode(), url)
+        # 返回下载的内容
         return response2.read()
-
-
-

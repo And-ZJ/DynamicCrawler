@@ -1,6 +1,7 @@
-from dynamicCrawler import DownloadUrl,MyWebBrowser
+from dynamicCrawler import DownloadUrl, MyWebBrowser
 import os
 import bs4 as bs
+
 
 class AnimationUrl:
     """
@@ -105,12 +106,13 @@ class DownloadAnimationImage:
             try:
                 content = DownloadUrl.download(imgUrl, self.animationChapterUrl.url)
             except Exception as e:
-                print(e, imgUrl)
+                print('Error:', e, imgUrl)
                 continue
+            #这里关于403错误的问题，之前误认为不会引发Exception，其实是会的，故去掉这里
+            # if b'403' in content:
+            #     print("403", imgUrl)
+            #     continue
             # 获取图片的名字方便命名
-            if b'403' in content:
-                print("403", imgUrl)
-                continue
             file_name = self.saveDir + str(index) + '.' + imgUrl.split(r'.')[-1]
             # 以二进制格式写入
             f = open(file_name, 'wb')
